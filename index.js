@@ -2,11 +2,14 @@ const express = require('express');
 const ExcelJS = require('exceljs');
 const cors = require('cors');
 const path = require('path');
-
+const port = process.env.PORT || 3000;
 const app = express();
-const PORT = 3000;
 
-app.use(cors());
+const corsOptions = {
+    origin: 'https://riesgo-ten.vercel.app/',  // Cambia esto por tu dominio frontend
+    credentials: true,  // Permite enviar cookies de terceros
+  };
+  app.use(cors(corsOptions));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const archivoExcel = path.join(__dirname, 'Libro1.xlsx');
@@ -159,6 +162,6 @@ app.get('/get-datos', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+app.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

@@ -54,7 +54,7 @@
 
             let markers = [];
 
-            fetch("https://riesgo-ten.vercel.app/get-datos")
+            fetch("/get-datos")
                 .then(response => response.json())
                 .then(data => {
                     console.log('🔹 Datos recibidos:', data); // Depurar: mostrar los datos completos recibidos
