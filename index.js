@@ -12,7 +12,7 @@ const corsOptions = {
   app.use(cors(corsOptions));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const archivoExcel = path.join(__dirname, 'Libro1.xlsx');
+const archivoExcel = path.join(process.cwd(), 'public', 'Libro1.xlsx');
 
 app.get('/get-datos', async (req, res) => {
     try {
