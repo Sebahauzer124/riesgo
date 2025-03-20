@@ -163,5 +163,5 @@ app.get('/get-datos', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en http://localhost:${port}`);
 });
