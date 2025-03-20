@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Transportes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .cliente {
+            margin: 10px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .cliente span {
+            font-weight: bold;
+        }
+        .detalle {
+            display: none;
+            margin-top: 10px;
+        }
+        #map {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Listado de Transportes</h1>
+        <div id="map"></div>
+        <div class="mb-3">
+            <label for="transporteSelect" class="form-label">Selecciona un transporte:</label>
+            <select id="transporteSelect" class="form-select">
+                <option value="">Selecciona un transporte</option>
+            </select>
+        </div>
+        <div id="clientesContainer"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let map = L.map('map').setView([-34.6037, -58.3816], 10); // Posición inicial (Ej: Buenos Aires)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            let markers = [];
+
+            fetch("https://db59-190-105-215-11.ngrok-free.app/get-datos")
+                .then(response => response.json())
+                .then(data => {
+                    console.log('🔹 Datos recibidos:', data); // Depurar: mostrar los datos completos recibidos
+                    const { transporteMap } = data;
+                    const transporteSelect = document.getElementById('transporteSelect');
+                    const clientesContainer = document.getElementById('clientesContainer');
+
+                    // Agregar opciones de transporte
+                    Object.keys(transporteMap).forEach(transporte => {
+                        const option = document.createElement('option');
+                        option.value = transporte;
+                        option.textContent = transporte;
+                        transporteSelect.appendChild(option);
+                    });
+
+                    // Manejo de selección de transporte
+                    transporteSelect.addEventListener('change', (event) => {
+                        const transporteSeleccionado = event.target.value;
+                        console.log("🚚 Transporte seleccionado:", transporteSeleccionado); // Depurar: qué transporte ha sido seleccionado
+
+                        if (transporteSeleccionado) {
+                            console.log('🔹 Clientes del transporte seleccionado:', transporteMap[transporteSeleccionado].clientes); // Depurar: mostrar los clientes del transporte seleccionado
+                            mostrarClientes(transporteMap[transporteSeleccionado].clientes);
+                            actualizarMapa(transporteMap[transporteSeleccionado].clientes);
+                        } else {
+                            clientesContainer.innerHTML = '';
+                            limpiarMapa();
+                        }
+                    });
+
+                    // Función para mostrar los clientes
+                    function mostrarClientes(clientes) {
+                        clientesContainer.innerHTML = '';
+                        const clientesArray = Object.values(clientes).sort((a, b) => b.riesgoTotal - a.riesgoTotal);
+                        console.log("🔹 Clientes ordenados por riesgo:", clientesArray); // Depurar: ver cómo están ordenados los clientes
+
+                        clientesArray.forEach(cliente => {
+                            const clienteDiv = document.createElement('div');
+                            clienteDiv.classList.add('cliente', 'shadow-sm');
+
+                            clienteDiv.innerHTML = `
+                                <h5>${cliente.descripcionCliente}</h5>
+                                <p><span>Bultos:</span> ${cliente.bultos}</p>
+                                <p><span>Riesgo Total:</span> ${cliente.riesgoTotal}</p>
+                                <button class="btn btn-primary ver-detalle-btn">Mostrar más detalles</button>
+                                <div class="detalle">
+                                    <p><span>Menos de 50m:</span> ${cliente.menos50m}</p>
+                                    <p><span>Acceso sin cruce:</span> ${cliente.accesoSinCruce}</p>
+                                    <p><span>Acceso en carro:</span> ${cliente.accesoCarro}</p>
+                                    <p><span>Ingreso por escaleras:</span> ${cliente.ingresoEscaleras}</p>
+                                    <p><span>Buena iluminación:</span> ${cliente.buenaIluminacion}</p>
+                                    <p><span>Seguridad 5S:</span> ${cliente.seguridad5s}</p>
+                                    <p><span>Trabajo en altura:</span> ${cliente.trabajoAltura}</p>
+                                    <p><span>Riesgo eléctrico:</span> ${cliente.riesgoElectricidad}</p>
+                                    <p><span>Clientes violentos:</span> ${cliente.clientesViolentos}</p>
+                                </div>
+                            `;
+                            clientesContainer.appendChild(clienteDiv);
+                        });
+
+                        document.querySelectorAll('.ver-detalle-btn').forEach((btn) => {
+                            btn.addEventListener('click', () => {
+                                const detalleDiv = btn.nextElementSibling;
+                                if (detalleDiv.style.display === 'none' || detalleDiv.style.display === '') {
+                                    detalleDiv.style.display = 'block';
+                                    btn.textContent = 'Ocultar detalles';
+                                } else {
+                                    detalleDiv.style.display = 'none';
+                                    btn.textContent = 'Mostrar más detalles';
+                                }
+                            });
+                        });
+                    }
+
+                    // Función para actualizar el mapa con clientes
+                    // Función para actualizar el mapa con clientes
+function actualizarMapa(clientes) {
+    limpiarMapa();
+    const clientesArray = Object.values(clientes);
+    console.log("Clientes a mostrar en el mapa:", clientesArray);
+
+    clientesArray.forEach(cliente => {
+        if (cliente.coordenadasx && cliente.coordenadasy) {
+            // Verificar si las coordenadas son números válidos
+            let latitud = parseFloat(cliente.coordenadasy) / 1000000; // Normalización
+            let longitud = parseFloat(cliente.coordenadasx) / 1000000;
+
+            if (!isNaN(latitud) && !isNaN(longitud)) {
+                console.log(`📍 Coordenadas del cliente: ${cliente.descripcionCliente} - lat: ${latitud}, lon: ${longitud}`);
+
+                if (Math.abs(latitud) < 90 && Math.abs(longitud) < 180) {
+                    const marker = L.marker([latitud, longitud])
+                        .addTo(map)
+                        .bindPopup(`<b>${cliente.descripcionCliente}</b><br>Riesgo: ${cliente.riesgoTotal}`);
+                    markers.push(marker);
+                } else {
+                    console.log(`⚠️ Coordenadas no válidas para ${cliente.descripcionCliente}: lat: ${latitud}, lon: ${longitud}`);
+                }
+            } else {
+                console.log(`⚠️ Coordenadas no válidas para ${cliente.descripcionCliente}: lat: ${latitud}, lon: ${longitud}`);
+            }
+        } else {
+            console.log(`⚠️ El cliente ${cliente.descripcionCliente} no tiene coordenadas válidas.`);
+        }
+    });
+
+    if (markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds());
+    } else {
+        console.log("⚠️ No se encontraron clientes con coordenadas válidas para mostrar en el mapa.");
+    }
+}
+
+                    // Función para limpiar el mapa
+                    function limpiarMapa() {
+                        markers.forEach(marker => map.removeLayer(marker));
+                        markers = [];
+                    }
+                })
+                .catch(error => console.error('Error al cargar los datos:', error));
+        });
+    </script>
+</body>
+</html>

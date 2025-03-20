@@ -1,0 +1,101 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    padding: 10px;
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+    color: #007bff;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+select, input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+li {
+    background: white;
+    padding: 12px;
+    border: 1px solid #ddd;
+    margin-top: 5px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Colores dinámicos según el estado */
+.visitado {
+    color: green;
+    font-weight: bold;
+}
+
+.no-visitado {
+    color: red;
+    font-weight: bold;
+}
+
+.canjeo-si {
+    color: green;
+    font-weight: bold;
+}
+
+.canjeo-no {
+    color: red;
+    font-weight: bold;
+}
+
+.puntos {
+    font-weight: bold;
+    color: #ff9800;
+}
+
+.desafio-si {
+    color: green;
+    font-weight: bold;
+}
+
+.desafio-no {
+    color: red;
+    font-weight: bold;
+}
+
+/* Diseño Responsive */
+@media (max-width: 600px) {
+    body {
+        padding: 5px;
+    }
+
+    select, input {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    li {
+        font-size: 12px;
+        padding: 10px;
+    }
+}

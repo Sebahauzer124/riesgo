@@ -1,0 +1,23 @@
+t=2024-12-30T10:57:56-0300 lvl=info msg="no configuration paths supplied"
+t=2024-12-30T10:57:56-0300 lvl=info msg="ignoring default config path, could not stat it" path=C:\\Users\\Vifood\\AppData\\Local/ngrok/ngrok.yml
+t=2024-12-30T10:57:56-0300 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4040 allow_hosts=[]
+t=2024-12-30T10:57:56-0300 lvl=eror msg="failed to reconnect session" obj=tunnels.session err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+t=2024-12-30T10:57:56-0300 lvl=eror msg="session closing" obj=tunnels.session err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+t=2024-12-30T10:57:56-0300 lvl=info msg="received stop request" obj=app stopReq="{err:{Remote:true Inner:{Inner:0xc000596180}} restart:false}"
+t=2024-12-30T10:57:56-0300 lvl=eror msg="terminating with error" obj=app err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+t=2024-12-30T10:57:56-0300 lvl=warn msg="failed to check for update" obj=updater err="Post \"https://update.equinox.io/check\": context canceled"
+t=2024-12-30T10:57:56-0300 lvl=crit msg="command failed" err="authentication failed: Usage of ngrok requires a verified account and authtoken.\n\nSign up for an account: https://dashboard.ngrok.com/signup\nInstall your authtoken: https://dashboard.ngrok.com/get-started/your-authtoken\r\n\r\nERR_NGROK_4018\r\n"
+t=2024-12-30T10:57:56-0300 lvl=info msg="no more state changes" obj=tunnels.session
+t=2024-12-30T11:01:26-0300 lvl=info msg="no configuration paths supplied"
+t=2024-12-30T11:01:26-0300 lvl=info msg="using configuration at default config path" path=C:\\Users\\Vifood\\AppData\\Local/ngrok/ngrok.yml
+t=2024-12-30T11:01:26-0300 lvl=info msg="open config file" path=C:\\Users\\Vifood\\AppData\\Local\\ngrok\\ngrok.yml err=nil
+t=2024-12-30T11:01:26-0300 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4040 allow_hosts=[]
+t=2024-12-30T11:01:27-0300 lvl=info msg="client session established" obj=tunnels.session
+t=2024-12-30T11:01:27-0300 lvl=info msg="tunnel session started" obj=tunnels.session
+t=2024-12-30T11:01:27-0300 lvl=info msg="started tunnel" obj=tunnels name=command_line addr=http://localhost:3000 url=https://909a-190-105-215-11.ngrok-free.app
+t=2024-12-30T11:12:37-0300 lvl=info msg="join connections" obj=join id=1d1d14580202 l=[::1]:3000 r=54.174.20.93:60506
+t=2024-12-30T11:15:15-0300 lvl=info msg="join connections" obj=join id=7db2d529dc82 l=[::1]:3000 r=98.81.239.57:33966
+t=2024-12-30T11:15:26-0300 lvl=info msg="join connections" obj=join id=9e0023205fa9 l=[::1]:3000 r=3.92.63.17:41104
+t=2024-12-30T11:15:50-0300 lvl=warn msg="failed to open private leg" id=435fd1803624 privaddr=localhost:3000 err="dial tcp [::1]:3000: connectex: No connection could be made because the target machine actively refused it."
+t=2024-12-30T11:15:57-0300 lvl=warn msg="failed to open private leg" id=dee091238add privaddr=localhost:3000 err="dial tcp [::1]:3000: connectex: No connection could be made because the target machine actively refused it."
+t=2024-12-30T11:18:02-0300 lvl=warn msg="failed to open private leg" id=ed544d7036ba privaddr=localhost:3000 err="dial tcp [::1]:3000: connectex: No connection could be made because the target machine actively refused it."
