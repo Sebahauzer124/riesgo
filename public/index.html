@@ -107,22 +107,22 @@
                             const clienteDiv = document.createElement('div');
                             clienteDiv.classList.add('cliente', 'shadow-sm');
                             clienteDiv.innerHTML = `
-                                <h5>${cliente.descripcionCliente}</h5>
-                                <p><span>Bultos:</span> ${cliente.bultos}</p>
-                                <p><span>Riesgo Total:</span> ${cliente.riesgoTotal}</p>
-                                <button class="btn btn-primary ver-detalle-btn">Mostrar más detalles</button>
-                                <div class="detalle">
-                                    <p><span>Menos de 50m:</span> ${cliente.menos50m}</p>
-                                    <p><span>Acceso sin cruce:</span> ${cliente.accesoSinCruce}</p>
-                                    <p><span>Acceso en carro:</span> ${cliente.accesoCarro}</p>
-                                    <p><span>Ingreso por escaleras:</span> ${cliente.ingresoEscaleras}</p>
-                                    <p><span>Buena iluminación:</span> ${cliente.buenaIluminacion}</p>
-                                    <p><span>Seguridad 5S:</span> ${cliente.seguridad5s}</p>
-                                    <p><span>Trabajo en altura:</span> ${cliente.trabajoAltura}</p>
-                                    <p><span>Riesgo eléctrico:</span> ${cliente.riesgoElectricidad}</p>
-                                    <p><span>Clientes violentos:</span> ${cliente.clientesViolentos}</p>
-                                </div>
-                            `;
+    <h5>${cliente.descripcionCliente}</h5>
+    <p><span>Bultos:</span> ${cliente.bultos}</p>
+    <p><span>Riesgo Total:</span> ${cliente.riesgoTotal}</p>
+    <button class="btn btn-primary ver-detalle-btn">Mostrar más detalles</button>
+    <div class="detalle">
+        <p><span>Menos de 50m:</span> <span class="${getColorClass(cliente.menos50m)}">${cliente.menos50m}</span></p>
+        <p><span>Acceso sin cruce:</span> <span class="${getColorClass(cliente.accesoSinCruce)}">${cliente.accesoSinCruce}</span></p>
+        <p><span>Acceso en carro:</span> <span class="${getColorClass(cliente.accesoCarro)}">${cliente.accesoCarro}</span></p>
+        <p><span>Ingreso por escaleras:</span> <span class="${getColorClass(cliente.ingresoEscaleras)}">${cliente.ingresoEscaleras}</span></p>
+        <p><span>Buena iluminación:</span> <span class="${getColorClass(cliente.buenaIluminacion)}">${cliente.buenaIluminacion}</span></p>
+        <p><span>Seguridad 5S:</span> <span class="${getColorClass(cliente.seguridad5s)}">${cliente.seguridad5s}</span></p>
+        <p><span>Trabajo en altura:</span> <span class="${getColorClass(cliente.trabajoAltura, true)}">${cliente.trabajoAltura}</span></p>
+        <p><span>Riesgo eléctrico:</span> <span class="${getColorClass(cliente.riesgoElectricidad, true)}">${cliente.riesgoElectricidad}</span></p>
+        <p><span>Clientes violentos:</span> <span class="${getColorClass(cliente.clientesViolentos, true)}">${cliente.clientesViolentos}</span></p>
+    </div>
+`;
                             clientesContainer.appendChild(clienteDiv);
                         });
 
@@ -174,6 +174,18 @@
                 })
                 .catch(error => console.error('Error al cargar los datos:', error));
         });
+
+        // Función que devuelve la clase CSS de color
+function getColorClass(value, isNegative = false) {
+    // Si el valor es "NO" o "Sí" dependiendo de los campos, cambiamos el color
+    if (isNegative) {
+        // Si el campo debe ser verde cuando es "NO" y rojo cuando es "Sí"
+        return value.toUpperCase() === 'SI' ? 'text-danger' : 'text-success';
+    } else {
+        // Si el campo debe ser verde cuando es "Sí" y rojo cuando es "NO"
+        return value.toUpperCase() === 'NO' ? 'text-danger' : 'text-success';
+    }
+}
     </script>
 </body>
 </html>
