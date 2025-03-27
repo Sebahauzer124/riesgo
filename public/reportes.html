@@ -8,7 +8,7 @@
     <script>
         async function cargarDatos() {
             try {
-                const response = await fetch('https://riesgo-ten.vercel.app/get-datos');
+                const response = await fetch('/get-datos');
                 const data = await response.json();
                 const datosHoja3 = data.datosHoja3;
                 
