@@ -21,13 +21,15 @@ app.get('/get-datos', async (req, res) => {
 
         const hoja1 = workbook.getWorksheet('Hoja1');
         const hoja2 = workbook.getWorksheet('Hoja2');
+        const hoja3 = workbook.getWorksheet('Hoja3');
 
-        if (!hoja1 || !hoja2) {
-            return res.status(400).json({ error: 'No se pudieron encontrar las hojas "Hoja1" o "Hoja2" en el archivo Excel.' });
+        if (!hoja1 || !hoja2 || !hoja3) {
+            return res.status(400).json({ error: 'No se pudieron encontrar las hojas "Hoja1", "Hoja2" o "Hoja3" en el archivo Excel.' });
         }
 
         const datosHoja1 = [];
         const transporteMap = {};
+        const datosHoja3 = [];
 
         // Procesar Hoja 1
         hoja1.eachRow((row, rowNumber) => {
@@ -155,7 +157,26 @@ app.get('/get-datos', async (req, res) => {
             });
         });
 
-        res.json({ transporteMap });
+              // Procesar Hoja 3
+              hoja3.eachRow((row, rowNumber) => {
+                if (rowNumber === 1) return; // Omitir encabezados
+                datosHoja3.push({
+                    fecha: row.getCell(1).value,
+                    chofer: row.getCell(2).value,
+                    rol: row.getCell(3).value,
+                    volumen: row.getCell(4).value,
+                    rechazo: row.getCell(5).value,
+                    rotura: row.getCell(6).value,
+                    rutaDigital: row.getCell(7).value,
+                    adherenciaFrecuencia: row.getCell(8).value,
+                    excesoVelocidad: row.getCell(9).value,
+                    dispersionKilometros: row.getCell(10).value
+                });
+            });
+
+        res.json({ transporteMap,datosHoja3 });
+
+
     } catch (error) {
         console.error('Error al leer el archivo Excel:', error);
         res.status(500).json({ error: 'Error al leer el archivo Excel', message: error.message });

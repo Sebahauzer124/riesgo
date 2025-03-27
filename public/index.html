@@ -33,6 +33,9 @@
 </head>
 <body class="bg-light">
     <div class="container mt-5">
+        <div class="text-center mt-4">
+            <a href="reportes.html" class="btn btn-success">Ir a Reportes</a>
+        </div>
         <h1 class="text-center mb-4">Listado de Transportes</h1>
         <div id="map"></div>
         <div class="mb-3">
@@ -41,28 +44,32 @@
                 <option value="">Selecciona un transporte</option>
             </select>
         </div>
+        <!-- Botón para filtrar los clientes riesgosos -->
+        <div class="mb-3">
+            <button id="btnRiesgo" class="btn btn-danger">Filtrar Clientes Riesgosos</button>
+        </div>
         <div id="clientesContainer"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let map = L.map('map').setView([-34.6037, -58.3816], 10); // Posición inicial (Ej: Buenos Aires)
+            let map = L.map('map').setView([-34.6037, -58.3816], 10);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
             let markers = [];
+            let clientesActuales = [];
 
             fetch("/get-datos")
                 .then(response => response.json())
                 .then(data => {
-                    console.log('🔹 Datos recibidos:', data); // Depurar: mostrar los datos completos recibidos
                     const { transporteMap } = data;
                     const transporteSelect = document.getElementById('transporteSelect');
                     const clientesContainer = document.getElementById('clientesContainer');
 
-                    // Agregar opciones de transporte
+                    // Poblamos el select de transporte
                     Object.keys(transporteMap).forEach(transporte => {
                         const option = document.createElement('option');
                         option.value = transporte;
@@ -70,31 +77,35 @@
                         transporteSelect.appendChild(option);
                     });
 
-                    // Manejo de selección de transporte
+                    // Filtrar por transporte
                     transporteSelect.addEventListener('change', (event) => {
                         const transporteSeleccionado = event.target.value;
-                        console.log("🚚 Transporte seleccionado:", transporteSeleccionado); // Depurar: qué transporte ha sido seleccionado
-
                         if (transporteSeleccionado) {
-                            console.log('🔹 Clientes del transporte seleccionado:', transporteMap[transporteSeleccionado].clientes); // Depurar: mostrar los clientes del transporte seleccionado
-                            mostrarClientes(transporteMap[transporteSeleccionado].clientes);
-                            actualizarMapa(transporteMap[transporteSeleccionado].clientes);
+                            clientesActuales = Object.values(transporteMap[transporteSeleccionado].clientes);
+                            mostrarClientes(clientesActuales);
+                            actualizarMapa(clientesActuales);
                         } else {
                             clientesContainer.innerHTML = '';
                             limpiarMapa();
                         }
                     });
 
-                    // Función para mostrar los clientes
+                    // Filtrar los clientes riesgosos
+                    document.getElementById('btnRiesgo').addEventListener('click', () => {
+                        const clientesRiesgosos = clientesActuales
+                            .filter(cliente => cliente.riesgoTotal > 20)
+                            .sort((a, b) => b.riesgoTotal - a.riesgoTotal); // Ordena de más riesgoso a menos riesgoso
+
+                        mostrarClientes(clientesRiesgosos);
+                        actualizarMapa(clientesRiesgosos);
+                    });
+
+                    // Mostrar los clientes
                     function mostrarClientes(clientes) {
                         clientesContainer.innerHTML = '';
-                        const clientesArray = Object.values(clientes).sort((a, b) => b.riesgoTotal - a.riesgoTotal);
-                        console.log("🔹 Clientes ordenados por riesgo:", clientesArray); // Depurar: ver cómo están ordenados los clientes
-
-                        clientesArray.forEach(cliente => {
+                        clientes.forEach(cliente => {
                             const clienteDiv = document.createElement('div');
                             clienteDiv.classList.add('cliente', 'shadow-sm');
-
                             clienteDiv.innerHTML = `
                                 <h5>${cliente.descripcionCliente}</h5>
                                 <p><span>Bultos:</span> ${cliente.bultos}</p>
@@ -115,7 +126,8 @@
                             clientesContainer.appendChild(clienteDiv);
                         });
 
-                        document.querySelectorAll('.ver-detalle-btn').forEach((btn) => {
+                        // Mostrar/ocultar detalles del cliente
+                        document.querySelectorAll('.ver-detalle-btn').forEach(btn => {
                             btn.addEventListener('click', () => {
                                 const detalleDiv = btn.nextElementSibling;
                                 if (detalleDiv.style.display === 'none' || detalleDiv.style.display === '') {
@@ -129,47 +141,32 @@
                         });
                     }
 
-                    // Función para actualizar el mapa con clientes
-                    // Función para actualizar el mapa con clientes
-function actualizarMapa(clientes) {
-    limpiarMapa();
-    const clientesArray = Object.values(clientes);
-    console.log("Clientes a mostrar en el mapa:", clientesArray);
+                    // Actualizar el mapa con los clientes
+                    function actualizarMapa(clientes) {
+                        limpiarMapa();
+                        let newMarkers = [];
+                        clientes.forEach(cliente => {
+                            if (cliente.coordenadasx && cliente.coordenadasy) {
+                                let latitud = parseFloat(cliente.coordenadasy) / 1000000;
+                                let longitud = parseFloat(cliente.coordenadasx) / 1000000;
+                                if (!isNaN(latitud) && !isNaN(longitud) && Math.abs(latitud) < 90 && Math.abs(longitud) < 180) {
+                                    const marker = L.marker([latitud, longitud])
+                                        .addTo(map)
+                                        .bindPopup(`<b>${cliente.descripcionCliente}</b><br>Riesgo: ${cliente.riesgoTotal}`);
+                                    newMarkers.push(marker);
+                                }
+                            }
+                        });
 
-    clientesArray.forEach(cliente => {
-        if (cliente.coordenadasx && cliente.coordenadasy) {
-            // Verificar si las coordenadas son números válidos
-            let latitud = parseFloat(cliente.coordenadasy) / 1000000; // Normalización
-            let longitud = parseFloat(cliente.coordenadasx) / 1000000;
+                        if (newMarkers.length > 0) {
+                            const group = new L.featureGroup(newMarkers);
+                            map.fitBounds(group.getBounds());
+                        }
 
-            if (!isNaN(latitud) && !isNaN(longitud)) {
-                console.log(`📍 Coordenadas del cliente: ${cliente.descripcionCliente} - lat: ${latitud}, lon: ${longitud}`);
+                        markers = newMarkers;
+                    }
 
-                if (Math.abs(latitud) < 90 && Math.abs(longitud) < 180) {
-                    const marker = L.marker([latitud, longitud])
-                        .addTo(map)
-                        .bindPopup(`<b>${cliente.descripcionCliente}</b><br>Riesgo: ${cliente.riesgoTotal}`);
-                    markers.push(marker);
-                } else {
-                    console.log(`⚠️ Coordenadas no válidas para ${cliente.descripcionCliente}: lat: ${latitud}, lon: ${longitud}`);
-                }
-            } else {
-                console.log(`⚠️ Coordenadas no válidas para ${cliente.descripcionCliente}: lat: ${latitud}, lon: ${longitud}`);
-            }
-        } else {
-            console.log(`⚠️ El cliente ${cliente.descripcionCliente} no tiene coordenadas válidas.`);
-        }
-    });
-
-    if (markers.length > 0) {
-        const group = new L.featureGroup(markers);
-        map.fitBounds(group.getBounds());
-    } else {
-        console.log("⚠️ No se encontraron clientes con coordenadas válidas para mostrar en el mapa.");
-    }
-}
-
-                    // Función para limpiar el mapa
+                    // Limpiar los marcadores del mapa
                     function limpiarMapa() {
                         markers.forEach(marker => map.removeLayer(marker));
                         markers = [];

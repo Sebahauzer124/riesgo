@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos de Hoja 3</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        async function cargarDatos() {
+            try {
+                const response = await fetch('https://riesgo-ten.vercel.app/get-datos');
+                const data = await response.json();
+                const datosHoja3 = data.datosHoja3;
+                
+                const choferSelect = document.getElementById('choferSelect');
+                const fechaInput = document.getElementById('fechaInput');
+                const tablaBody = document.getElementById('tablaBody');
+
+                const choferes = [...new Set(datosHoja3.map(item => item.chofer))];
+                choferSelect.innerHTML = '<option value="">Todos</option>' + choferes.map(chofer => `<option value="${chofer}">${chofer}</option>`).join('');
+
+                function filtrarDatos() {
+                    const choferSeleccionado = choferSelect.value;
+                    const fechaSeleccionada = fechaInput.value;
+                    
+                    const datosFiltrados = datosHoja3.filter(item => 
+                        (!choferSeleccionado || item.chofer === choferSeleccionado) &&
+                        (!fechaSeleccionada || item.fecha.startsWith(fechaSeleccionada))
+                    );
+
+                    tablaBody.innerHTML = datosFiltrados.map(item => `
+                        <tr>
+                           <td>${item.fecha.substring(0, 10)}</td>
+
+                            <td>${item.chofer}</td>
+                            <td>${item.rol}</td>
+                            <td>${item.volumen}</td>
+                            <td>${item.rechazo}</td>
+                            <td>${item.rotura}</td>
+                            <td>${item.rutaDigital}</td>
+                            <td>${item.adherenciaFrecuencia}</td>
+                            <td>${item.excesoVelocidad}</td>
+                            <td>${item.dispersionKilometros}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                choferSelect.addEventListener('change', filtrarDatos);
+                fechaInput.addEventListener('input', filtrarDatos);
+                filtrarDatos();
+            } catch (error) {
+                console.error('Error al cargar los datos:', error);
+            }
+        }
+    </script>
+</head>
+<body onload="cargarDatos()" class="container py-4">
+    <h1 class="text-center mb-4">Datos de Hoja 3</h1>
+    <div class="text-center mt-4">
+        <a href="index.html" class="btn btn-success">Volver al Inicio</a>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="choferSelect" class="form-label">Filtrar por Chofer:</label>
+            <select id="choferSelect" class="form-select"></select>
+        </div>
+        <div class="col-md-6">
+            <label for="fechaInput" class="form-label">Filtrar por Fecha:</label>
+            <input type="date" id="fechaInput" class="form-control">
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha </th>
+                    <th>Chofer</th>
+                    <th>Rol</th>
+                    <th>Volumen</th>
+                    <th>Rechazo</th>
+                    <th>Rotura</th>
+                    <th>Ruta Digital</th>
+                    <th>Adherencia Frecuencia</th>
+                    <th>Exceso Velocidad</th>
+                    <th>Dispersión Kilómetros</th>
+                </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+        </table>
+    </div>
+</body>
+</html>
