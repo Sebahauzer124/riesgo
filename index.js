@@ -24,9 +24,21 @@ const FILE_ID = '18TiO3g2m1a7lPQhMB9Mol7MO4YtlkqzS'; // Reemplazá por el ID de 
 
 // Autenticación con cuenta de servicio desde variable de entorno JSON
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT),
-  scopes: SCOPES,
+  credentials: {
+    type: "service_account",
+    project_id: process.env.GOOGLE_PROJECT_ID,
+    private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
+    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    auth_uri: process.env.GOOGLE_AUTH_URI,
+    token_uri: process.env.GOOGLE_TOKEN_URI,
+    auth_provider_x509_cert_url: process.env.GOOGLE_AUTH_PROVIDER_X509_CERT_URL,
+    client_x509_cert_url: process.env.GOOGLE_CLIENT_X509_CERT_URL,
+  },
+  scopes: ['https://www.googleapis.com/auth/drive'],
 });
+
 
 async function descargarArchivoDesdeDrive(fileId, outputPath) {
   const drive = google.drive({ version: 'v3', auth: await auth.getClient() });
