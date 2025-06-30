@@ -24,7 +24,7 @@ const FILE_ID = '18TiO3g2m1a7lPQhMB9Mol7MO4YtlkqzS'; // Reemplazá por el ID de 
 
 // Autenticación con cuenta de servicio desde variable de entorno JSON
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT.replace(/\\n/g, '\n')),
+  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT),
   scopes: SCOPES,
 });
 
