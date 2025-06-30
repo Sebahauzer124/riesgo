@@ -10,25 +10,25 @@ const app = express();
 
 // Configuración CORS
 const corsOptions = {
-  origin: 'https://riesgo-ten.vercel.app/',
+  origin: 'https://riesgo.onrender.com',
   credentials: true,
 };
 app.use(cors(corsOptions));
 
-// Servir archivos estáticos si tenés
+// Servir archivos estáticos (opcional)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Google Drive config
-const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
-const FILE_ID = '18TiO3g2m1a7lPQhMB9Mol7MO4YtlkqzS'; // Reemplazá por el ID de tu archivo
+const FILE_ID = '18TiO3g2m1a7lPQhMB9Mol7MO4YtlkqzS';
 
-// Autenticación con cuenta de servicio desde variable de entorno JSON
+// Autenticación con cuenta de servicio desde variables de entorno
 const auth = new google.auth.GoogleAuth({
   credentials: {
-    type: "service_account",
+    type: 'service_account',
     project_id: process.env.GOOGLE_PROJECT_ID,
     private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    // reemplaza \n por salto de línea real en la clave privada
+    private_key: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
     client_id: process.env.GOOGLE_CLIENT_ID,
     auth_uri: process.env.GOOGLE_AUTH_URI,
@@ -39,7 +39,7 @@ const auth = new google.auth.GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/drive'],
 });
 
-
+// Función para descargar archivo Excel desde Google Drive
 async function descargarArchivoDesdeDrive(fileId, outputPath) {
   const drive = google.drive({ version: 'v3', auth: await auth.getClient() });
   const response = await drive.files.get(
@@ -50,21 +50,35 @@ async function descargarArchivoDesdeDrive(fileId, outputPath) {
   return new Promise((resolve, reject) => {
     const dest = fs.createWriteStream(outputPath);
     response.data.pipe(dest);
-    dest.on('finish', () => resolve(outputPath));
-    dest.on('error', reject);
+    dest.on('finish', () => {
+      console.log(`Archivo descargado en ${outputPath}`);
+      resolve(outputPath);
+    });
+    dest.on('error', (err) => {
+      console.error('Error al descargar archivo:', err);
+      reject(err);
+    });
   });
 }
 
+// Endpoint principal
 app.get('/get-datos', async (req, res) => {
   const localPath = path.join(__dirname, 'temp.xlsx');
 
   try {
-    // Descargar archivo Excel desde Google Drive
+    console.log('Iniciando descarga del archivo...');
     await descargarArchivoDesdeDrive(FILE_ID, localPath);
 
-    // Leer Excel con ExcelJS
+    const stats = fs.statSync(localPath);
+    if (stats.size === 0) {
+      throw new Error('Archivo descargado está vacío');
+    }
+    console.log(`Archivo descargado, tamaño: ${stats.size} bytes`);
+
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(localPath);
+
+    console.log('Hojas disponibles:', workbook.worksheets.map(ws => ws.name));
 
     const hoja1 = workbook.getWorksheet('Hoja1');
     const hoja2 = workbook.getWorksheet('Hoja2');
@@ -74,13 +88,13 @@ app.get('/get-datos', async (req, res) => {
       return res.status(400).json({ error: 'No se encontraron las hojas "Hoja1", "Hoja2" o "Hoja3".' });
     }
 
+    // Procesar datos
     const datosHoja1 = [];
     const transporteMap = {};
     const datosHoja3 = [];
 
-    // Procesar Hoja1
     hoja1.eachRow((row, rowNumber) => {
-      if (rowNumber === 1) return; // saltar encabezado
+      if (rowNumber === 1) return;
 
       const coordenadasx = row.getCell(29).value;
       const coordenadasy = row.getCell(30).value;
@@ -110,7 +124,6 @@ app.get('/get-datos', async (req, res) => {
       });
     });
 
-    // Procesar Hoja2
     hoja2.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return;
 
@@ -129,15 +142,15 @@ app.get('/get-datos', async (req, res) => {
             descripcionCliente,
             bultos: 0,
             riesgoTotal: 0,
-            menos50m: "No disponible",
-            accesoSinCruce: "No disponible",
-            accesoCarro: "No disponible",
-            ingresoEscaleras: "No disponible",
-            buenaIluminacion: "No disponible",
-            seguridad5s: "No disponible",
-            trabajoAltura: "No disponible",
-            riesgoElectricidad: "No disponible",
-            clientesViolentos: "No disponible"
+            menos50m: 'No disponible',
+            accesoSinCruce: 'No disponible',
+            accesoCarro: 'No disponible',
+            ingresoEscaleras: 'No disponible',
+            buenaIluminacion: 'No disponible',
+            seguridad5s: 'No disponible',
+            trabajoAltura: 'No disponible',
+            riesgoElectricidad: 'No disponible',
+            clientesViolentos: 'No disponible',
           };
         }
 
@@ -146,44 +159,31 @@ app.get('/get-datos', async (req, res) => {
       }
     });
 
-    // Agregar datos adicionales de Hoja1 a clientes de Hoja2
+    // Agregar info extra de hoja1 a transporteMap
     hoja1.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return;
 
       const cliente = row.getCell(1).value;
-      const riesgoTotal = row.getCell(28).value;
-      const menos50m = row.getCell(11).value;
-      const accesoSinCruce = row.getCell(12).value;
-      const accesoCarro = row.getCell(13).value;
-      const ingresoEscaleras = row.getCell(14).value;
-      const buenaIluminacion = row.getCell(15).value;
-      const seguridad5s = row.getCell(16).value;
-      const trabajoAltura = row.getCell(17).value;
-      const riesgoElectricidad = row.getCell(18).value;
-      const clientesViolentos = row.getCell(19).value;
-      const coordenadasx = row.getCell(29).value;
-      const coordenadasy = row.getCell(30).value;
 
-      Object.keys(transporteMap).forEach(transporte => {
+      Object.keys(transporteMap).forEach((transporte) => {
         if (transporteMap[transporte].clientes[cliente]) {
           const clienteData = transporteMap[transporte].clientes[cliente];
-          clienteData.riesgoTotal = riesgoTotal;
-          clienteData.menos50m = menos50m;
-          clienteData.accesoSinCruce = accesoSinCruce;
-          clienteData.accesoCarro = accesoCarro;
-          clienteData.ingresoEscaleras = ingresoEscaleras;
-          clienteData.buenaIluminacion = buenaIluminacion;
-          clienteData.seguridad5s = seguridad5s;
-          clienteData.trabajoAltura = trabajoAltura;
-          clienteData.riesgoElectricidad = riesgoElectricidad;
-          clienteData.clientesViolentos = clientesViolentos;
-          clienteData.coordenadasx = coordenadasx;
-          clienteData.coordenadasy = coordenadasy;
+          clienteData.riesgoTotal = row.getCell(28).value;
+          clienteData.menos50m = row.getCell(11).value;
+          clienteData.accesoSinCruce = row.getCell(12).value;
+          clienteData.accesoCarro = row.getCell(13).value;
+          clienteData.ingresoEscaleras = row.getCell(14).value;
+          clienteData.buenaIluminacion = row.getCell(15).value;
+          clienteData.seguridad5s = row.getCell(16).value;
+          clienteData.trabajoAltura = row.getCell(17).value;
+          clienteData.riesgoElectricidad = row.getCell(18).value;
+          clienteData.clientesViolentos = row.getCell(19).value;
+          clienteData.coordenadasx = row.getCell(29).value;
+          clienteData.coordenadasy = row.getCell(30).value;
         }
       });
     });
 
-    // Procesar Hoja3
     hoja3.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return;
       datosHoja3.push({
@@ -196,18 +196,18 @@ app.get('/get-datos', async (req, res) => {
         rutaDigital: row.getCell(7).value,
         adherenciaFrecuencia: row.getCell(8).value,
         excesoVelocidad: row.getCell(9).value,
-        dispersionKilometros: row.getCell(10).value
+        dispersionKilometros: row.getCell(10).value,
       });
     });
 
-    // Responder con los datos
+    // Enviar resultado
     res.json({ transporteMap, datosHoja3 });
 
-    // Opcional: borrar archivo temporal si querés
-    fs.unlink(localPath, err => {
+    // Borrar archivo temporal
+    fs.unlink(localPath, (err) => {
       if (err) console.warn('No se pudo borrar archivo temporal:', err);
+      else console.log('Archivo temporal borrado');
     });
-
   } catch (error) {
     console.error('❌ Error al procesar datos:', error);
     res.status(500).json({ error: 'Error al leer el archivo Excel', message: error.message });
